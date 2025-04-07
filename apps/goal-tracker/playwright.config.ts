@@ -18,8 +18,6 @@ export default defineConfig({
   reporter: [
     // Built-in HTML reporter with custom output folder
     ['html', { outputFolder: 'e2e/report', open: 'always' }],
-    // Your custom reporter
-    ['./e2e/custom-reporter.ts']
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {

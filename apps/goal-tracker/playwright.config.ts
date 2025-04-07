@@ -9,14 +9,18 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './e2e' }),
-  reporter: [['html', { outputFolder: 'e2e/report', open: 'always' }]],
+  reporter: [
+    // Built-in HTML reporter with custom output folder
+    ['html', { outputFolder: 'e2e/report', open: 'always' }],
+    // Your custom reporter
+    ['./e2e/custom-reporter.ts']
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,

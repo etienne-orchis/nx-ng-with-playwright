@@ -1,4 +1,58 @@
+import { Reporter, TestCase, TestResult } from '@playwright/test/reporter';
+import { writeFileSync } from 'fs';
 
+// Define the CustomReporter class
+class CustomReporter implements Reporter {
+  private testResults: {
+    name: string;
+    steps: string;
+    status: string;
+    duration: string;
+  }[];
+
+  constructor() {
+    this.testResults = [];
+  }
+
+  // Called after each test finishes
+  onTestEnd(test: TestCase, result: TestResult): void {
+    const steps = result.steps.map((step) => step.title).join(', ');
+    this.testResults.push({
+      name: test.title,
+      steps: steps,
+      status: result.status,
+      duration: (result.duration / 1000).toFixed(2) + 's',
+    });
+  }
+
+  // Generate HTML report after all tests have finished
+  private generateHTMLReport(): void {
+    const testsSummary = this.testResults
+      .map(
+        (test, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${test.name}</td>
+        <td>${test.steps}</td>
+        <td>${test.status.charAt(0).toUpperCase() + test.status.slice(1)}</td>
+        <td>${test.duration}</td>
+      </tr>
+    `
+      )
+      .join('');
+
+    const passed = this.testResults.filter(
+      (test) => test.status === 'passed'
+    ).length;
+    const failed = this.testResults.filter(
+      (test) => test.status === 'failed'
+    ).length;
+    const skipped = this.testResults.filter(
+      (test) => test.status === 'skipped'
+    ).length;
+    const total = passed + failed + skipped;
+
+    const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -56,7 +110,7 @@
 
         <div class="header-container">
           <h1>Test Results Summary</h1>
-          <p>Total Tests: 1 | Passed: 1 | Failed: 0 | Skipped: 0</p>
+          <p>Total Tests: ${total} | Passed: ${passed} | Failed: ${failed} | Skipped: ${skipped}</p>
           <div class="chart-container">
             <canvas id="donutChart"></canvas>
           </div>
@@ -74,15 +128,7 @@
               </tr>
             </thead>
             <tbody>
-              
-      <tr>
-        <td>1</td>
-        <td>has title</td>
-        <td>Before Hooks, page.goto(/), locator.innerText(h1), expect.toContain, After Hooks</td>
-        <td>Passed</td>
-        <td>0.83s</td>
-      </tr>
-    
+              ${testsSummary}
             </tbody>
           </table>
         </div>
@@ -96,7 +142,7 @@
               labels: ['Passed', 'Failed', 'Skipped'],
               datasets: [{
                 label: 'Test Results',
-                data: [1, 0, 0],
+                data: [${passed}, ${failed}, ${skipped}],
                 backgroundColor: ['#4CAF50', '#F44336', '#FFC107'],
                 hoverOffset: 4
               }]
@@ -109,4 +155,15 @@
         </script>
       </body>
       </html>
-    
+    `;
+
+    writeFileSync('e2e/report/index.html', htmlContent);
+  }
+
+  // Called when the testing finishes
+  onEnd(): void {
+    this.generateHTMLReport();
+  }
+}
+
+export default CustomReporter;

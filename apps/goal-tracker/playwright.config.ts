@@ -16,7 +16,10 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './e2e' }),
 
-  reporter: [['html'], ['playwright-qatouch-reporter']],
+  reporter: [
+    ['html', { outputFolder: './e2e/report/', open: 'never' }],
+    ['playwright-qatouch-reporter'],
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
